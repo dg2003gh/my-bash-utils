@@ -1,0 +1,121 @@
+#!/usr/bin/env bash
+
+#title		: dkdroid
+#description	: a command to easily run a android docker container..
+#author         : Douglas Guimarães<dg2003gh@gmail.com>
+#date           : 12/26/2023
+#version        : 0.1.0 
+#GNU bash	: 5.2.21
+#=======================================================
+
+
+((! "$UID" == 0)) && { echo 'please, run as root!'; exit 1; }
+
+container="$1"
+port="$2"
+config_file='/etc/dkdroid.conf'
+stop_docker=''
+display_wizard=''
+
+function ADD_CONFIG_FILE() {
+	if [[ ! -f $config_file ]]; then
+	   read -p 'Would you like to save the container id and the port to be used later? [y/n] ' response
+
+	   if [[ "${response,,}" == 'y' ]]; then
+	       :> $config_file
+	       echo -e "container='$container'\nport='$port'" > $config_file
+	       echo "Configuration saved! [$config_file]"
+
+	   else
+		echo 'Ok, the configuration will be not saved! If it was a mistake, please, re-run the program.'
+	   fi
+
+	   [[ -f $config_file ]] && { source $config_file; }
+	else
+	   _HELP
+	fi
+}
+
+function REMOVE_CONFIG_FILE() {
+	 rm $config_file &>/dev/null  \
+	 && { echo 'Configuration file deleted!'; exit 0; } \
+	 || { echo 'There is no configuration file set to be deleted.'; exit 1; }
+}
+
+function CLEAN_ANDROID() {
+	echo 'cleaning...'
+	adb disconnect $port
+	docker stop $container
+	modprobe -vr binder_linux ashmem_linux
+	[[ -n $stop_docker ]] && { systemctl stop docker; }
+	echo 'Everything is clean. Byee!'
+	exit 0;
+}
+
+function RUN_ANDROID() {
+	if type -p docker adb scrcpy &>/dev/null; then
+	  echo 'Setting everything up, please, wait a moment...'
+	  systemctl start docker
+	  docker start $container && { echo 'container is up...'; }
+
+	  echo 'Enabling required modules...' 
+	  modprobe binder_linux devices="binder,hwbinder,vndbinder" 
+	  modprobe ashmem_linux
+
+	  adb connect $port && { echo 'adb: connected to android container.'; }
+	  scrcpy -s $port
+
+	else
+	  echo 'Please, verify if all dependencies are installed! docker, adb and scrcpy.'
+	  exit 127
+	fi
+
+	CLEAN_ANDROID 
+
+}
+
+function _HELP() {
+	echo \
+	'
+	Usage: dkdroid [container id] [Exposed container port] [options...] [Arguments...]
+
+	About:
+		A command that simplify run docker android emulation.
+
+	[Disclaimer]: If configuration file is set, docker container id and port arguments are not required. 
+
+	Options:
+	-a	Display configuration file wizard.
+	-c 	Custom configuration file directory. [Default: /etc/dkdroid.config]
+	-d 	Delete existing configuration file. [ If it is not the default, pass -c option]
+	-h	Displays this help message.
+	-s	Assing to stop docker on systemd.
+
+	Exemple:
+		dkdroid 4dda617e161a localhost:5555
+	'
+	exit 0
+}
+
+function OPTION_NOT_FOUND_MESSAGE() {
+	echo "-$1 is invalid! please, use \`redroid-run -h\` to see the available options."
+	exit 1;
+}
+
+while getopts ":hasdc:" option; do
+	case $option in
+		 a) display_wizard='0'			;;
+		 c) config_file="$OPTARG"		;;
+		 d) REMOVE_CONFIG_FILE			;;
+		 h) _HELP				;;
+		 s) stop_docker='0'			;;
+		\?) OPTION_NOT_FOUND_MESSAGE $OPTARG	;;
+	esac
+done
+
+
+
+if [[ -n $container ]] && [[ -n $port ]]; then
+	[[ -n $display_wizard ]] && { ADD_CONFIG_FILE; }
+	RUN_ANDROID $container $port
+fi
