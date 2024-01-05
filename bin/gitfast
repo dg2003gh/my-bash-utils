@@ -14,7 +14,7 @@ function _CHECK() {
     local path="$1"
     local message="$2"
     
-    if (("$#" > 2)) && [[ -e $path ]]; then
+    if (("$#" == 2)) && [[ -e $path ]]; then
             git add "$path"
             git commit -m "$message"
             [[ -n $push_it ]] && { git push; }
@@ -43,10 +43,10 @@ if ! type -p 'git' > /dev/null; then
     exit 127
 fi
 
-while getopts ':hp' option; do 
+while getopts 'hp' option; do 
     case $option in 
          h) _HELP                       ;;
-         p) push_it='1'                 ;;
+         p) push_it='1'; shift          ;;
         \?) OPTION_NOT_FOUND $OPTARG    ;;
     esac
 done 
