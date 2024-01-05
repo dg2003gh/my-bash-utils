@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+
+#title       : gitfast
+#description : A command to add, commit, push to a git repository.
+#author      : Douglas Guimarães<dg2003gh@gmail.com>
+#date        : 01-04-2024
+#version     : 0.1.0
+#GNU bash    : 5.2.21
+#=======================================================
+
+function _CHECK() {
+    local path="$1"
+    local message="$2"
+    
+    if (("$#" == 2)) && [[ -e $path ]]; then
+            git add "$path"
+            git commit -m "$message" 
+    else
+        echo -e '\033[31mPlease, you must give a valid path and a message.\033[0m'
+        exit 1
+    fi
+}
+
+function _HELP() {
+    echo \
+    '
+    Usage: gitall [file to be added] [commit message]
+
+    -h|--help   Display this help.
+    '
+    exit 0
+}
+
+if ! type -p 'git' > /dev/null; then 
+    echo -e '\033[31mGit was not found!\033[0m Please, install git to run this program.'
+    exit 127
+fi
+
+[[ "$1" == '-h' ]] && { _HELP; }
+
+_CHECK "$@"; 
+
