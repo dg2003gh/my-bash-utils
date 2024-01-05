@@ -27,8 +27,6 @@ Below is a list of the scripts with their names, descriptions, last updated date
 
  |title|description|date|version|GNU|
  |-|-|-|-|-|
- | bstodo | A simple CLI to do list. | 12/10/2023 | 0.1.0 | 5.2.1 |
  | kbled | turn on your keyboard led on wayland with one command. | 01-04-2024 | 0.1.0 | 5.2.21 |
- | dkdroid | a command to easily run a android docker container.. | 12/26/2023 | 0.1.0 | 5.2.21 |
  | README-UPDATER | Updates a git repository README.md with file header information everytime a it is added. | 01-04-2024 | 0.1.0 | 5.2.21 |
  | gitfast | A command to add, commit, push to a git repository. | 01-04-2024 | 0.1.0 | 5.2.21 |
