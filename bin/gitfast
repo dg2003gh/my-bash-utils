@@ -27,9 +27,14 @@ function _CHECK() {
 function _HELP() {
     echo \
     '
-    Usage: gitall [file to be added] [commit message]
+    Usage: gitfast [Option...] [file to be added] [commit message]
 
-    -h|--help   Display this help.
+    Options:
+        -h   Display this help.
+        -p   Assign to push to repository.
+
+    Exemple:
+        gitfast -p myscript "add my fabulous script."
     '
     exit 0
 }
