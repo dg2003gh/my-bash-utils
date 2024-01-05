@@ -1,0 +1,80 @@
+#!/usr/bin/env bash
+
+#title          : kbled
+#description	: turn on your keyboard led on wayland with one command.
+#author         : Douglas Guimarães<dg2003gh@gmail.com>
+#date           : 01-04-2024
+#version        : 0.1.0
+#GNU bash	: 5.2.21
+#=======================================================
+
+state='' # 0(off)/1(on)
+input_id='' 
+
+(("$UID" != 0)) && { echo 'Please, run the program as root.'; exit 1; }
+
+function LIST_DEVICES() {
+	local leds_path=($(find /sys/class/leds/${input_id:-*}::scrolllock/brightness -maxdepth 1))
+
+	if [[ -z "$state" ]]; then				
+		leds_path=(${leds_path[@]##*ds\/})
+		leds_path=(${leds_path[@]%%\:\:*})
+	fi
+
+	echo ${leds_path[@]}
+}
+
+function SET_KBLED()	{
+	local devices=$(LIST_DEVICES $state $input_id)
+
+	if [[ -z "$devices" ]]; then
+		echo "Coudn't find ${input_id:-the device}, please, use kbled -l to see the available inputs..."
+		exit 1
+	fi
+
+	tee $devices <<< "$state" > /dev/null
+
+	(($state == 0))				\
+	&& { state='\033[31moff\033[0m'; }	\
+	|| { state='\033[32mon\033[0m'; }
+
+	echo -e "Keyboard led turned ${state}."
+}
+
+function _HELP() {
+	echo  '
+	Usage: kbled [option...] [Argument...]
+
+	Description:
+		Turn on|off your keyboard led on wayland with one command.
+
+	Options:
+		-o	Turn led on.
+		-f	Turn led off.
+		-h 	Displays this help.
+		-l 	List founded input in /sys/class/leds.
+		-i	Specify which input file scrolllock must be turn on | off.
+
+	Exemple:
+		kbled -o -i input7 # will turn on the input7 file led.
+	'
+	exit 0
+}
+
+function OPTION_NOT_FOUND_MESSAGE(){
+	echo "-$1 option doesn't exist. Please, use kbled -h to see the available options."
+}
+
+while getopts ':hofli:' option; do
+    case "$option" in
+	 o) state='1'				;;
+	 f) state='0'				;;
+	 i) input_id="$OPTARG"			;;
+	 l) LIST_DEVICES; exit 0		;;
+	 h) _HELP				;;
+	\?) OPTION_NOT_FOUND_MESSAGE $OPTARG	;;
+    esac
+done
+
+(( "$#" < 1 )) && { _HELP; }
+[[ -n $state ]] && { SET_KBLED $state $input_id; }
