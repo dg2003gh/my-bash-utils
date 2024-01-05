@@ -8,13 +8,16 @@
 #GNU bash    : 5.2.21
 #=======================================================
 
+push_it=''
+
 function _CHECK() {
     local path="$1"
     local message="$2"
     
-    if (("$#" == 2)) && [[ -e $path ]]; then
+    if (("$#" > 2)) && [[ -e $path ]]; then
             git add "$path"
-            git commit -m "$message" 
+            git commit -m "$message"
+            [[ -n $push_it ]] && { git push; }
     else
         echo -e '\033[31mPlease, you must give a valid path and a message.\033[0m'
         exit 1
@@ -31,12 +34,22 @@ function _HELP() {
     exit 0
 }
 
+function OPTION_NOT_FOUND() {
+    echo "-$1 is not a option. Please use gitfast -h to see the available options."
+}
+
 if ! type -p 'git' > /dev/null; then 
     echo -e '\033[31mGit was not found!\033[0m Please, install git to run this program.'
     exit 127
 fi
 
-[[ "$1" == '-h' ]] && { _HELP; }
+while getopts ':hp' option; do 
+    case $option in 
+         h) _HELP                       ;;
+         p) push_it='1'                 ;;
+        \?) OPTION_NOT_FOUND $OPTARG    ;;
+    esac
+done 
 
 _CHECK "$@"; 
 
