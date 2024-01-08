@@ -9,7 +9,7 @@
 #=======================================================================================
 
 workdir='/home/dg2003/Documentos/my-bash-utils/'
-keywords=('^#title' '^#description' '^#date' '^#version' '^#GNU')
+keywords=('^#title' '^#description' '^#date' '^#version' '^#GNU bash')
 output_file="${workdir}README.md"
 readme_header=''
 
@@ -22,7 +22,7 @@ function CREATE_TABLE() {
 
     keywords="${keywords[@]//*/&\|}"
     keywords="${keywords%|}"
-    keywords="${keywords//[[:space:]]}"
+    keywords="${keywords//\|[[:space:]]/\|}"
     
     readarray  -d ':' _result_list < <(grep -Erih  "${keywords}"  "${workdir}")
 
