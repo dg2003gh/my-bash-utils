@@ -30,6 +30,7 @@ function CREATE_TABLE() {
     final_table[0]="|${final_table[0]//\|\|}|"
 
     final_table[1]="\n${final_table[0]//[[:alnum:]]/-}\n" # Table header divisor
+    final_table[1]="${final_table[1]//[[:space:]]/-}"
 
     _result_list=("${_result_list[@]//[[:space:]]#title*/|\\n|}") # Table content
     final_table[2]="${_result_list[@]//\#*/\|}|" 
