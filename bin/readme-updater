@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
-#title          : README-UPDATER
+#title          : readme-updater
 #description	: Updates a git repository README.md with file header information everytime a it is added.
 #author         : Douglas Guimarães
-#date		: 01-04-2024
-#version        : 0.1.0
+#date		: 01-05-2024
+#version        : 1.1.0
 #GNU bash    	: 5.2.21
 #=======================================================================================
 
@@ -19,22 +19,20 @@ function GET_README_HEADER() {
 
 function CREATE_TABLE() {
     local final_table=()
-    local _opt=''
 
-    for keyword in "${keywords[@]}"; do 
-	readarray  -d ':' _result_list < <(grep -rih "${keyword}"  "${workdir}")   
- 
-	[[ "$keyword" == "${keywords[-1]}" ]] && { _opt='|\n'; }
-	
-	for ((_result=2; _result < "${#_result_list[@]}"; _result++)); do 
-	    _result_list[$_result]="${_result_list[$_result]//\#*}" 
-	
-	    final_table[$_result]+="|${_result_list[$_result]}$_opt"
-	done
+    keywords="${keywords[@]//*/&\|}"
+    keywords="${keywords%|}"
+    keywords="${keywords//[[:space:]]}"
     
-	final_table[0]+="|${keyword//[[:punct:]]}$_opt"
-	final_table[1]+="|-$_opt"
-    done
+    readarray  -d ':' _result_list < <(grep -Erih  "${keywords}"  "${workdir}")
+
+    final_table[0]="${keywords[@]//[[:punct:]]/\|}" # Table header
+    final_table[0]="|${final_table[0]//\|\|}|"
+
+    final_table[1]="\n${final_table[0]//[[:alnum:]]/-}\n" # Table header divisor
+
+    _result_list=("${_result_list[@]//[[:space:]]#title*/|\\n|}") # Table content
+    final_table[2]="${_result_list[@]//\#*/\|}|" 
 
     echo -en "${readme_header}" ${final_table[@]} > $output_file
 }
@@ -42,7 +40,7 @@ function CREATE_TABLE() {
 function _HELP() {
     echo \
     '
-    Usage: readme [Option...] [Argument...]
+    Usage: readme-updater [Option...] [Argument...]
 
     Description:
 
@@ -52,14 +50,14 @@ function _HELP() {
     Options:
 	
 	-h	Display this help.
-	-k	Specify which keywords should be search.
+	-k	Specify which keywords should be search. [Separate by space] 
 	-l	Specify the line that the table should be started. [Default is line 27]
 	-o	Specify the output file.
 	-w	Specify the workdir, which directory keywords should be search in files.
 	
     Exemple:
 
-	README-UPDATER -w $HOME/Documents/Scripts -k "^#title,^#Description,^#last-update" -o $HOME/README.md 
+	README-UPDATER -w $HOME/Documents/Scripts -k "^#title ^#Description ^#last-update" -o $HOME/README.md 
     '
     exit 0
 }
@@ -72,7 +70,7 @@ function OPTION_NOT_FOUND_MESSAGE() {
 while getopts ':hw:k:o:l:' option; do 
     case $option in 
 	h)  _HELP				;;
-	k)  keywords="$OPTARG"			;;
+	k)  keywords=($OPTARG)			;;
 	l)  GET_README_HEADER "$OPTARG"		;;
 	o)  output_file="$OPTARG"		;;
 	w)  workdir="$OPTARG"			;;
