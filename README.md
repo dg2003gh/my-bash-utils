@@ -26,7 +26,7 @@ kbled -o
 Below is a list of the scripts with their names, descriptions, last updated date, and bash version.
 
  |title|description|date|version|GNU bash| 
-|-----|-----------|----|-------|--- ----|
+|-----|-----------|----|-------|--------|
  | gitfast | A command to add, commit, push to a git repository. | 01-04-2024 | 0.1.0 | 5.2.21|
 | kbled | turn on your keyboard led on wayland with one command. | 01-04-2024 | 0.1.0 | 5.2.21|
 | dkdroid | a command to easily run a android docker container.. | 12-26-2023 | 0.1.0 | 5.2.21|
