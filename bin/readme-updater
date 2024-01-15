@@ -3,7 +3,7 @@
 #title          : readme-updater
 #description	: Updates a git repository README.md with file header information everytime a it is added.
 #author         : Douglas Guimarães
-#date			: 01-05-2024
+#date			: 01-15-2024
 #version        : 1.2.0
 #GNU bash    	: 5.2.21
 #=======================================================================================
