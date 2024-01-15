@@ -30,4 +30,4 @@ Below is a list of the scripts with their names, descriptions, last updated date
 | dkdroid| a command to easily run a android docker container..| 12/26/2023| 0.1.0 | 5.2.21|
 | gitfast| A command to add, commit, push to a git repository.| 01-04-2024| 0.1.0| 5.2.21|
 | kbled| turn on your keyboard led on wayland with one command.| 01-04-2024| 0.1.0| 5.2.21|
-| readme-updater| Updates a git repository README.md with file header information everytime a it is added.| 01-05-2024| 1.2.0| 5.2.21|
+| readme-updater| Updates a git repository README.md with file header information everytime a it is added.| 01-15-2024| 1.2.0| 5.2.21|
