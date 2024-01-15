@@ -3,8 +3,8 @@
 #title          : readme-updater
 #description	: Updates a git repository README.md with file header information everytime a it is added.
 #author         : Douglas Guimarães
-#date		: 01-05-2024
-#version        : 1.1.0
+#date			: 01-05-2024
+#version        : 1.2.0
 #GNU bash    	: 5.2.21
 #=======================================================================================
 
@@ -20,22 +20,20 @@ function GET_README_HEADER() {
 function CREATE_TABLE() {
     local final_table=()
 
-    keywords="${keywords[@]//*/&\|}"
-    keywords="${keywords%|}"
-    keywords="${keywords//\|[[:space:]]/\|}"
-    
-    readarray  -d ':' _result_list < <(grep -Erih  "${keywords}"  "${workdir}")
+	IFS='|'
 
-    final_table[0]="${keywords//[[:punct:]]/\|}" # Table header
-    final_table[0]="|${final_table[0]//\|\|}|"
+    readarray  _result_list < <(grep -Erih  "${keywords[*]}"  "${workdir}")
 
-    final_table[1]="\n${final_table[0]//[[:alnum:]]/-}\n" # Table header divisor
-    final_table[1]="${final_table[1]//[[:space:]]/-}"
+    final_table[0]="|${keywords[*]//[[:punct:]]/}|" # Table header
 
-    _result_list=("${_result_list[@]//[[:space:]]#title*/|\\n|}") # Table content
-    final_table[2]="${_result_list[@]//\#*/\|}|" 
+    final_table[1]="\n${final_table[0]//[[:alnum:][:space:]]/-}" # Table header divisor
 
-    echo -en "${readme_header}" ${final_table[@]} > $output_file
+    _result_list=("${_result_list[@]//*${keywords[0]//[[:punct:]]}*:/\\n|}") # Filtering result list
+    _result_list=("${_result_list[@]//*:}")
+
+    final_table[2]="${_result_list[*]%%[[:space:]]}|" # Table content
+
+    echo -ne "${readme_header} ${final_table[@]}" > $output_file
 }
 
 function _HELP() {
@@ -46,35 +44,35 @@ function _HELP() {
     Description:
 
 	A command that search a list of pattern in files from a given directory
-	and make a markdown file with a table that contains the search return. 
+	and make a markdown file with a table that contains the search return.
 
     Options:
-	
+
 	-h	Display this help.
-	-k	Specify which keywords should be search. [Separate by space] 
+	-k	Specify which keywords should be search. [Separate by space and the first keyword will be the new row separator]
 	-l	Specify the line that the table should be started. [Default is line 27]
 	-o	Specify the output file.
 	-w	Specify the workdir, which directory keywords should be search in files.
-	
+
     Exemple:
 
-	README-UPDATER -w $HOME/Documents/Scripts -k "^#title ^#Description ^#last-update" -o $HOME/README.md 
+	README-UPDATER -w $HOME/Documents/Scripts -k "^#title ^#Description ^#last-update" -o $HOME/README.md
     '
     exit 0
 }
 
 function OPTION_NOT_FOUND_MESSAGE() {
-    echo -e "-${1} \033[31moption doesn't exist or need an argument.\033[0m" 
+    echo -e "-${1} \033[31moption doesn't exist or need an argument.\033[0m"
     exit 1
-} 
+}
 
-while getopts ':hw:k:o:l:' option; do 
-    case $option in 
-	h)  _HELP				;;
-	k)  keywords=($OPTARG)			;;
-	l)  GET_README_HEADER "$OPTARG"		;;
-	o)  output_file="$OPTARG"		;;
-	w)  workdir="$OPTARG"			;;
+while getopts ':hw:k:o:l:' option; do
+    case $option in
+	h)  _HELP								;;
+	k)  keywords=($OPTARG)					;;
+	l)  GET_README_HEADER "$OPTARG"			;;
+	o)  output_file="$OPTARG"				;;
+	w)  workdir="$OPTARG"					;;
 	\?) OPTION_NOT_FOUND_MESSAGE "$OPTARG"	;;
     esac
 done
