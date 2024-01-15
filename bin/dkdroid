@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
-#title		: dkdroid
-#description	: a command to easily run a android docker container..
+#title			: dkdroid
+#description	: A command to easily run a android docker container.
 #author         : Douglas Guimarães<dg2003gh@gmail.com>
-#date           : 12/26/2023
-#version        : 0.1.0 
-#GNU bash	: 5.2.21
+#date           : 01-15-2024
+#version        : 1.0.0
+#GNU bash		: 5.2.21
 #=======================================================
 
 
@@ -42,11 +42,27 @@ function REMOVE_CONFIG_FILE() {
 	 || { echo 'There is no configuration file set to be deleted.'; exit 1; }
 }
 
+function VERIFY_MODULES() {
+    local module_path="/lib/modules/$(uname -r)"
+
+	if [[ -f "$module_path/binder_linux" ]]	&& [[ -f "$module_path/ashmem" ]]; then
+	    if [[ -n $clean ]]; then
+             modprobe -vr binder_linux ashmem_linux
+        else
+            echo 'Enabling required modules...'
+	        modprobe binder_linux devices="binder,hwbinder,vndbinder"
+   	        modprobe ashmem_linux
+        fi
+    else
+        echo 'Modules not found!'
+    fi
+}
+
 function CLEAN_ANDROID() {
 	echo 'cleaning...'
 	adb disconnect $port
 	docker stop $container
-	modprobe -vr binder_linux ashmem_linux
+
 	[[ -n $stop_docker ]] && { systemctl stop docker; }
 	echo 'Everything is clean. Byee!'
 	exit 0;
@@ -58,10 +74,6 @@ function RUN_ANDROID() {
 	  systemctl start docker
 	  docker start $container && { echo 'container is up...'; }
 
-	  echo 'Enabling required modules...' 
-	  modprobe binder_linux devices="binder,hwbinder,vndbinder" 
-	  modprobe ashmem_linux
-
 	  adb connect $port && { echo 'adb: connected to android container.'; }
 	  scrcpy -s $port
 
@@ -70,7 +82,7 @@ function RUN_ANDROID() {
 	  exit 127
 	fi
 
-	CLEAN_ANDROID 
+	CLEAN_ANDROID $@
 
 }
 
@@ -89,10 +101,11 @@ function _HELP() {
 	-c 	Custom configuration file directory. [Default: /etc/dkdroid.config]
 	-d 	Delete existing configuration file. [ If it is not the default, pass -c option]
 	-h	Displays this help message.
-	-s	Assing to stop docker on systemd.
+	-s	Assign to stop docker on systemd.
+
 
 	Exemple:
-		dkdroid 4dda617e161a localhost:5555
+		dkdroid 4dda617e161a localhost:5555 -m
 	'
 	exit 0
 }
@@ -102,13 +115,14 @@ function OPTION_NOT_FOUND_MESSAGE() {
 	exit 1;
 }
 
-while getopts ":hasdc:" option; do
+while getopts ":hasmdc:" option; do
 	case $option in
-		 a) display_wizard='0'			;;
-		 c) config_file="$OPTARG"		;;
-		 d) REMOVE_CONFIG_FILE			;;
-		 h) _HELP				;;
-		 s) stop_docker='0'			;;
+		 a) display_wizard='0'					;;
+		 c) config_file="$OPTARG"				;;
+		 d) REMOVE_CONFIG_FILE					;;
+		 h) _HELP								;;
+		 m) load_modules='1'                    ;;
+         s) stop_docker='0'						;;
 		\?) OPTION_NOT_FOUND_MESSAGE $OPTARG	;;
 	esac
 done
