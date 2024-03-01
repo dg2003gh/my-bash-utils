@@ -1,44 +1,44 @@
 #!/usr/bin/env bash
 
 #title          : readme-updater
-#description	: Updates a git repository README.md with file header information everytime a it is added.
+#description    : Updates a git repository README.md with file header information everytime a it is added.
 #author         : Douglas Guimarães
-#date			: 01-15-2024
+#date           : 03-01-2024
 #version        : 1.2.0
-#GNU bash    	: 5.2.21
+#GNU bash       : 5.2.21
 #=======================================================================================
 
-workdir='/home/dg2003/Documentos/my-bash-utils/'
+workdir='/home/dg2003/Documentos/git/my-bash-utils/'
 keywords=('^#title' '^#description' '^#date' '^#version' '^#GNU bash')
 output_file="${workdir}README.md"
 readme_header=''
 
 function GET_README_HEADER() {
-    readme_header="$(head -n $1 $output_file)\n\n"
+	readme_header="$(head -n $1 $output_file)\n\n"
 }
 
 function CREATE_TABLE() {
-    local final_table=()
+	local final_table=()
 
 	IFS='|'
 
-    readarray  _result_list < <(grep -Erih  "${keywords[*]}"  "${workdir}")
+	readarray _result_list < <(grep -Erih "${keywords[*]}" "${workdir}")
 
-    final_table[0]="|${keywords[*]//[[:punct:]]/}|" # Table header
+	final_table[0]="|${keywords[*]//[[:punct:]]/}|" # Table header
 
-    final_table[1]="\n${final_table[0]//[[:alnum:][:space:]]/-}" # Table header divisor
+	final_table[1]="\n${final_table[0]//[[:alnum:][:space:]]/-}" # Table header divisor
 
-    _result_list=("${_result_list[@]//*${keywords[0]//[[:punct:]]}*:/\\n|}") # Filtering result list
-    _result_list=("${_result_list[@]//*:}")
+	_result_list=("${_result_list[@]//*${keywords[0]//[[:punct:]]/}*:/\\n|}") # Filtering result list
+	_result_list=("${_result_list[@]//*:/}")
 
-    final_table[2]="${_result_list[*]%%[[:space:]]}|" # Table content
+	final_table[2]="${_result_list[*]%%[[:space:]]}|" # Table content
 
-    echo -ne "${readme_header} ${final_table[@]}" > $output_file
+	echo -ne "${readme_header} ${final_table[@]}" >$output_file
 }
 
 function _HELP() {
-    echo \
-    '
+	echo \
+		'
     Usage: readme-updater [Option...] [Argument...]
 
     Description:
@@ -58,23 +58,23 @@ function _HELP() {
 
 	README-UPDATER -w $HOME/Documents/Scripts -k "^#title ^#Description ^#last-update" -o $HOME/README.md
     '
-    exit 0
+	exit 0
 }
 
 function OPTION_NOT_FOUND_MESSAGE() {
-    echo -e "-${1} \033[31moption doesn't exist or need an argument.\033[0m"
-    exit 1
+	echo -e "-${1} \033[31moption doesn't exist or need an argument.\033[0m"
+	exit 1
 }
 
 while getopts ':hw:k:o:l:' option; do
-    case $option in
-	h)  _HELP								;;
-	k)  keywords=($OPTARG)					;;
-	l)  GET_README_HEADER "$OPTARG"			;;
-	o)  output_file="$OPTARG"				;;
-	w)  workdir="$OPTARG"					;;
-	\?) OPTION_NOT_FOUND_MESSAGE "$OPTARG"	;;
-    esac
+	case $option in
+	h) _HELP ;;
+	k) keywords=($OPTARG) ;;
+	l) GET_README_HEADER "$OPTARG" ;;
+	o) output_file="$OPTARG" ;;
+	w) workdir="$OPTARG" ;;
+	\?) OPTION_NOT_FOUND_MESSAGE "$OPTARG" ;;
+	esac
 done
 
 CREATE_TABLE
