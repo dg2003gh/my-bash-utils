@@ -1,0 +1,84 @@
+#!/usr/bin/env bash
+
+#title          : watchit
+#description    : a command to run another command whenever something changes inside a directory or a file.
+#author         : Douglas Guimarães
+#date           : 02-01-2024
+#version        : 1.0.0
+#GNU bash       : 5.2.26
+#================================================================================================================================
+
+events=()
+recursive='--recursive'
+
+function CHECK_DEPS() {
+	if ! type -p inotifywait >/dev/null 2>&1; then
+		echo -e \
+			"\033[31minotifywait\033[0m seems not to be installed!" \
+			" Please \033[32minstall\033[0m to use this command." \
+			" [in a package usually called \033[32minotify-tools\033[0m]"
+		exit 1
+	fi
+}
+
+function _WATCH() {
+	local dir="$1"
+	local cmd="$2"
+
+	[[ -n "${events[*]}" ]] && { events[0]='--event'; }
+
+	local watcher="inotifywait --quiet -qq ${recursive} ${events[*]} ${dir}"
+
+	echo -e "\033[32mWatching directory:\033[0m ${dir}\n\n\033[31mLog:\033[0m\n"
+
+	while ${watcher}; do
+		local _date="$(date "+%T")"
+		echo -e "${dir} \033[33mchanged\033[0m, running command... \033[32m[${_date}]\033[0m"
+		${cmd}
+	done
+}
+
+function _HELP() {
+	echo \
+		'
+    USAGE: watchit [OPTIONS] [PATH|file] [COMMAND] 
+
+    OPTIONS:
+          -c    Watch whenever a file is created.
+          -d    Watch whenever a file is deleted.
+          -h    Display this message.
+          -m    Watch whenever a file is moved.
+          -n    Disable recursive watching on a directory.
+          -o    Disable watch whenever a file is modified.
+          -u    Cleans the terminal.
+    
+    EXEMPLE:
+          watchit -donc /bin "echo 'Something changed in /bin directory!'"
+
+    ABOUT:
+        A simple command to run command when a file
+        inside a certain directory changes. 
+
+    VERSION: 1.0.0
+    '
+}
+
+CHECK_DEPS
+
+while getopts 'hnomcdu' option; do
+	case "$option" in
+	n) recursive='' ;;
+	o) events[2]='' ;;
+	m) events[3]='move' ;;
+	c) events[4]='create' ;;
+	d) events[5]='delete' ;;
+	h) _HELP ;;
+	u) clear ;; # Yeah, baby! That's my favorite option that I did by my shellf ;)
+	esac
+
+	shift
+done
+
+(("$#" != "2")) &&
+	{ _HELP; } ||
+	{ _WATCH "$1" "$2"; }
